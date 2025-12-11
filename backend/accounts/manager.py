@@ -36,7 +36,7 @@ class CustomUserManager(UserManager):
         
         extra_fields.setdefault('is_staff',False)
         extra_fields.setdefault('is_superuser',False)
-        extra_fields.setdefault('is_public',True)
+        # extra_fields.setdefault('is_public',True)
         extra_fields.setdefault('is_active',False)
         user = self.model(email=email,username=username,role = 'P',**extra_fields)
         
@@ -90,3 +90,4 @@ class CustomUserManager(UserManager):
         user.set_password(password)
         user.save(using=self._db)
         return user
+    

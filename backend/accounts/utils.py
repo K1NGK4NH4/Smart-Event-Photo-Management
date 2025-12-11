@@ -22,7 +22,7 @@ def passwordgenerator():
     return ''.join(secrets.choice(chars) for _ in range(8))
 
 def verify_otp(email,otp):
-    if cache.get(email) == otp:
+    if cache.get(email) == int(otp):
         cache.delete(email)
         return True
     return False
