@@ -32,20 +32,14 @@ class EventSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Event Photographer should be an active member of Club")
         return value
     
-    #Crazy VVVImportant
     def update(self, instance, validated_data):
-    # event_members list nikalo (agar PATCH me aayi ho)
         event_members = validated_data.pop('event_members', None)
-        # baaki normal fields update
         instance = super().update(instance, validated_data)
         if event_members is not None:
-            # sirf NON-PUBLIC users allow karo
             allowed_members = []
             for user in event_members:
                 if user.role != 'P':   # P = Public (NOT allowed)
                     allowed_members.append(user)
-
-            # replace strategy
             instance.event_members.set(allowed_members)
 
         return instance

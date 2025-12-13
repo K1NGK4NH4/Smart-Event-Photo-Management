@@ -28,23 +28,31 @@ class IsPublicUser(BasePermission):
                and request.user.role == "P"
           )         
 
+class IsEventCoordinator(BasePermission):
+     message = "You must be the event Coordinator to access this"
+     def has_permission(self, request, view):
+          return bool(
+               request.user
+               and request.user.is_authenticated
+               and request.user.role != "P" 
+          )
+     def has_object_permission(self, request, view, obj):
+          if request.user.role == "A":
+               return True
+          return obj.event_coordinator == request.user 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+class IsEventPhotoGrapher(BasePermission):
+     message = "You must be the photographer of the event to access this"
+     def has_permission(self, request, view):
+          return bool(
+               request.user
+               and request.user.is_authenticated
+               and request.user.role != "P" 
+          )
+     def has_object_permission(self, request, view, obj):
+          if request.user.role == "A":
+               return True
+          return obj.event_photographer == request.user or obj.event_coordinator == request.user 
 
 GLOBAL_ROLE = {
     "P":{
