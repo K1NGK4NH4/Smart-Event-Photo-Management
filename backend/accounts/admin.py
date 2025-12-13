@@ -9,11 +9,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from .permissions import GLOBAL_ROLE
 from django.utils.crypto import get_random_string
+from .permissions import IsAdminUser
 
 admin.site.register(User,UserAdmin)
 
 #add User manual (Member and Public) to the app
 class AddUser(APIView):
+    permission_classes = [IsAdminUser]
     def post(self,request,*args,**kwargs):
         serializer = UserCreateSerializer(data = request.data)
         serializer.is_valid(raise_exception=True)
@@ -22,15 +24,9 @@ class AddUser(APIView):
 
         password = passwordgenerator()
         if role == 'P':
-            User.objects.create_public_user(email=email)
-        elif role == 'M':
-            User.objects.create_user(email=email,password=password)
-            send_password(email,password)
-        elif role == 'A':
-            username = email.split("@")[0]
-            while User.objects.filter(username=username).exists():
-                username = f"{username}_{get_random_string(4).lower()}"
-            User.objects.create_superuser(email=email,password=password,username=username)
+            User.objects.create_user(email=email)
+        else:
+            User.objects.create_user(email=email,role=role,password=password)
             send_password(email,password)
         return Response({
             'message':'User created Successfully',
@@ -65,10 +61,6 @@ class UpdateUserRole(APIView):
         
         #Change diff roles
         user.role = new_role
-        status=GLOBAL_ROLE[new_role]
-        for attr, val in status.items():
-            setattr(user, attr, val)
-
         if new_role == 'M' or new_role == 'A':
             password = passwordgenerator()
             user.set_password(password)

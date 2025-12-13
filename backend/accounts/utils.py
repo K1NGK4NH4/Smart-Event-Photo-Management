@@ -2,7 +2,14 @@ from django.core.mail import send_mail
 from django.core.cache import cache
 from django.conf import settings
 import random,string,secrets
+from django.utils.crypto import get_random_string
 
+def generate_unique_username(base_username):
+        username = base_username
+        from .models import User
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}_{get_random_string(4).lower()}"
+        return username
 
 def send_otp(email):
     subject = "Your OTP for Login in Smart Event Photo Management"
@@ -19,7 +26,6 @@ def send_otp(email):
 def passwordgenerator():
     allowed_special = "!@#$%&*^|?"
     chars = string.ascii_letters+string.digits+allowed_special
-    # length = random.randint(8,16)
     return ''.join(secrets.choice(chars) for _ in range(8))
 
 def verify_otp(email,otp):
