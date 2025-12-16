@@ -1,7 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from .utils import send_otp,verify_otp
+from .utils import verify_otp,generate_and_send_otp
+# from .tasks import send_otp
 from .serializers import PublicLoginSerializer,EmailPasswordLoginSerializer
 from rest_framework.authtoken.models import Token
 from .models import User
@@ -12,7 +13,7 @@ class SendOTP(APIView):
         serializer = PublicLoginSerializer(data = request.data)
         if serializer.is_valid():
             email = serializer.validated_data.get('email')
-            send_otp(email)
+            generate_and_send_otp(email)
             return Response({
                 'message':'OTP sent successfully',
                 'status':status.HTTP_200_OK
