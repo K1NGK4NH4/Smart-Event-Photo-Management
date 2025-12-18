@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import json
+from .tasks import extract_exif,generate_thumbnail,add_watermark
 # Create your views here.
 class PhotoUploadView(generics.CreateAPIView):
     # serializer_class = PhotoBulkUploadSerializer
@@ -20,7 +21,13 @@ class PhotoUploadView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)  #data pakad kar serializer mai daalo
         serializer.is_valid(raise_exception=True) #check all validation(field,level,model,queryset)
-        serializer.save() #jo serializer mai create hai usko call karo bas
+        photos = serializer.save() #jo serializer mai create hai usko call karo bas
+        if isinstance(photos,Photo): #check for single object
+            photos=[photos]
+        for photo in photos:
+            extract_exif.delay(photo.photo_id)
+            generate_thumbnail.delay(photo.photo_id)
+            add_watermark.delay(photo.photo_id,photo.event.event_name)
         return Response({
             "message": "Photos are created successfully",
         })

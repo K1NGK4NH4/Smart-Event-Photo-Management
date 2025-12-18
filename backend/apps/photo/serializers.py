@@ -34,7 +34,7 @@ class PhotoDestroySerializer(serializers.Serializer):
 
 class PhotoUserTagSerializer(serializers.ModelSerializer):
     event = serializers.SlugRelatedField(slug_field='event_name',queryset=Event.objects.all()) #gives particular event instance
-    tagged_users = serializers.SlugRelatedField(slug_field='email',queryset=User.objects.all(),many=True) #gives user instance
+    tagged_users = serializers.SlugRelatedField(slug_field='email',queryset=User.objects.all(),many=True,required=False) #gives user instance
     uploaded_photos = serializers.ListField(
         child = serializers.ImageField(allow_empty_file = False,use_url=False),
         write_only = True

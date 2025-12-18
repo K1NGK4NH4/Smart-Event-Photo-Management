@@ -20,7 +20,8 @@ class Photo(models.Model):
     shutter_speed = models.CharField(max_length=100,null=True,blank=True)
     
     thumbnail = models.ImageField(upload_to="thumbnails/", null=True, blank=True)
-
+    watermarked_image = models.ImageField(upload_to="watermark/",null=True,blank=True)
+    
     event = models.ForeignKey(Event,on_delete=models.CASCADE,related_name="photos")
     tagged_user = models.ManyToManyField(User,null=True,blank=True,related_name="tagged_In")
 
