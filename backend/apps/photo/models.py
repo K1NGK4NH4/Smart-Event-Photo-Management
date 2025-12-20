@@ -4,7 +4,6 @@ import uuid
 from apps.event.models import Event
 from accounts.models import User
 # Create your models here.
-
 class Tag(models.Model):
     tag_name = models.CharField(max_length=50, unique=True)
 
@@ -26,18 +25,20 @@ class Photo(models.Model):
     watermarked_image = models.ImageField(upload_to="watermark/",null=True,blank=True)
     
     event = models.ForeignKey(Event,on_delete=models.CASCADE,related_name="photos")
-    tagged_user = models.ManyToManyField(User,null=True,blank=True,related_name="tagged_In")
-    tag = models.ManyToManyField(Tag,blank=True,related_name="related_photos")
 
+    tagged_user = models.ManyToManyField(User,blank=True,related_name="tagged_In",through='TaggedUser')
+    tag = models.ManyToManyField(Tag,blank=True,related_name="related_photos")
     liked_users = models.ManyToManyField(User,related_name='liked_photos',through='Like',blank=True)
+    is_favourite_of = models.ManyToManyField(User,related_name='favourite_photos',through='Favourite',blank=True)
+
     class Meta:
         ordering = [
-            "-taken_at",
-            "-upload_time_stamp"
+            "-upload_time_stamp",
+            "-taken_at"
         ]
 
 class Like(models.Model):
-    like_id = models.UUIDField(default=uuid.uuid4,primary_key=True,editable=False)
+    like_id = models.UUIDField(default=uuid.uuid4,primary_key=True,editable=False,unique=True)
     photo = models.ForeignKey(Photo,on_delete=models.CASCADE)
     user  = models.ForeignKey(User,on_delete=models.CASCADE)
     like_time_stamp = models.DateTimeField(auto_now_add=True)
@@ -48,5 +49,42 @@ class Like(models.Model):
                 fields=["user", "photo"],
                 name="unique_user_photo_like"
             )
+        ]
+        ordering = [
+            "-like_time_stamp"
+        ]
+
+class Favourite(models.Model):
+    fav_id = models.UUIDField(default=uuid.uuid4,primary_key=True,editable=False,unique=True)
+    photo = models.ForeignKey(Photo,on_delete=models.CASCADE)
+    user  = models.ForeignKey(User,on_delete=models.CASCADE)
+    add_to_fav_time_stamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "photo"],
+                name="unique_user_photo_fav"
+            )
+        ]
+        ordering = [
+            "-add_to_fav_time_stamp"
+        ]
+
+class TaggedUser(models.Model):
+    tag_id = models.UUIDField(default=uuid.uuid4,primary_key=True,editable=False,unique=True)
+    photo = models.ForeignKey(Photo,on_delete=models.CASCADE)
+    user  = models.ForeignKey(User,on_delete=models.CASCADE)
+    tag_time_stamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "photo"],
+                name="unique_user_photo_tag"
+            )
+        ]
+        ordering = [
+            "-tag_time_stamp"
         ]
 

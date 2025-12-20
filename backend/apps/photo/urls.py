@@ -6,4 +6,5 @@ urlpatterns = [
     path('upload_photo/' , views.upload_photo_view),
     path('delete_photo/' , views.delete_photos),
     path('update_photo/' , views.update_view),
+     path('',views.photo_list_view)
 ]

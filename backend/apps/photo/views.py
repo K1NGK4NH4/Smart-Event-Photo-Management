@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from rest_framework import generics,parsers
 from .models import Photo, Tag
-from .serializers import PhotoBulkUploadSerializer,PhotoDestroySerializer, PhotoBulkUpdateSerialier, PhotoSerializer
+from apps.event.models import Event
+from .serializers import PhotoBulkUploadSerializer,PhotoDestroySerializer, PhotoBulkUpdateSerialier, PhotoSerializer, PhotoListSerializer
 from accounts.permissions import IsEventPhotoGrapher
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
@@ -83,20 +84,32 @@ update_view = BulkPhotoUpdate.as_view()
 #is_private == False :- main Image can be seen by members and watermarked_image can be seen by public
 #additional field (like count)
 class PhotoRetrieveView(generics.RetrieveAPIView):
-    queryset = Photo.objects.all()
     lookup_field = 'photo_id'
     serializer_class = PhotoSerializer
-    # def get_object(self):
-    #     obj = get_object_or_404(Photo.objects.all(), **filter_kwargs)
-    #     self.check_object_permissions(self.request, obj)
-    #     return obj
-    # def retrieve(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     serializer = self.get_serializer(instance)
-    #     return Response(serializer.data)
-    
+    def get_queryset(self): #queryset mil gaya
+        if self.request.user.role == 'P':
+            return Photo.objects.filter(is_private=False)
+        return Photo.objects.all()
 
 photo_retreive_view = PhotoRetrieveView.as_view()
 
+#List view of photos is_private = true no public access 
+class PhotoListView(generics.ListAPIView):
+    serializer_class = PhotoListSerializer
+    def get_queryset(self):
+        queryset = Photo.objects.all()
+        event_name = self.request.query_params.get("event")
+        if event_name:
+            queryset = queryset.filter(event__event_name = event_name)
+        if self.request.user.role == 'P':
+            queryset = queryset.filter(is_private=False)
+        return queryset
 
-#PhotoGraphic Dashboard (Total likes , Total Downloads,)
+photo_list_view = PhotoListView.as_view()
+#protect the endpoint /media/photos/ (not to show public users)
+
+
+#PhotoGraphic Dashboard (Total likes , Total Downloads, uploaded photo in chrononical order)
+
+
+#Advanced Search API

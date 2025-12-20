@@ -49,3 +49,5 @@ class EventDetailsUpdateView(generics.RetrieveUpdateAPIView):
         return obj
 
 event_details_update = EventDetailsUpdateView.as_view()
+
+

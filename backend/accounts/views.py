@@ -20,8 +20,6 @@ home_view = HomeView.as_view()
 class UserProfileAPIView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     lookup_field = 'username'
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_serializer_class(self, *args, **kwargs):
         if self.request.user.role == 'P':
@@ -40,9 +38,6 @@ profile_view = UserProfileAPIView.as_view()
 class UserProfileUpdateView(generics.RetrieveUpdateAPIView):
     queryset = User.objects.all()
     lookup_field = 'username'
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
-
     def get_serializer_class(self, *args, **kwargs):
         if self.request.user.role == 'P':
             return PublicUserSerializer
@@ -57,7 +52,5 @@ class UserProfileUpdateView(generics.RetrieveUpdateAPIView):
 class ListMembers(generics.ListAPIView):
     queryset = User.objects.exclude(role = 'P')
     lookup_field = 'username'
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserSerializer
     

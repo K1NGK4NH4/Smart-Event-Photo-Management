@@ -30,6 +30,3 @@ def get_predictions(image_path, top_k=3):
         }
         for idx, prob in zip(top_idxs, top_probs)
     ]
-# photo = "C:\\Users\\Satya\\OneDrive\\Desktop\\Smart Event Photo Management\\smart-event-photo-management\\backend\\apps\\photo\\tiger.jpg"
-
-# print(get_predictions(photo))

@@ -12,9 +12,7 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['tag_name']
-    # def validate_tag_name(self,value):
-    #     
-
+       
 class PhotoBulkUploadSerializer(serializers.ModelSerializer):
     uploaded_photos = serializers.ListField(
         child = serializers.ImageField(allow_empty_file = False,use_url=False),
@@ -79,9 +77,61 @@ class PhotoDestroySerializer(serializers.Serializer):
 
 
 class PhotoSerializer(serializers.ModelSerializer):
-    tag = TagSerializer(read_only = True,many = True)
+    tag = serializers.SlugRelatedField(slug_field='tag_name',read_only=True, many=True)
+    like_count = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()
+    tagged_user = serializers.SlugRelatedField(slug_field='username',read_only=True, many=True)
+    event = serializers.SlugRelatedField(slug_field='event_name',read_only=True)
     class Meta:
         model = Photo
         fields = [
-            
+            "photo_id",
+            "image_url", 
+            "is_private",
+            "upload_time_stamp",
+            "taken_at",
+            "gps_latitude",
+            "gps_longitude",
+            "camera_model",
+            "aperture",
+            "shutter_speed",
+            "thumbnail",
+            "event", 
+            "tagged_user", 
+            "tag", 
+            "like_count", 
+        ]
+
+    def get_image_url(self, obj):
+        request = self.context.get("request")
+        if request is None:
+            return None
+        user = request.user
+        #If the person is public
+        if getattr(user, "role",None) == "P" :
+            return request.build_absolute_uri(obj.watermarked_image.url)
+        
+        #if the person is present in event
+        if obj.event.event_members.filter(email=user.email).exists():
+            return request.build_absolute_uri(obj.photo.url)
+        
+        # Admin will get absolute photo url
+        if  getattr(user, "role",None) == "A" :
+             return request.build_absolute_uri(obj.photo.url)
+        # Member / Photographer / Admin
+        return request.build_absolute_uri(obj.watermarked_image.url)
+    
+    def get_like_count(self,obj):
+        request = self.context.get("request")
+        if request is None:
+            return None
+        return obj.liked_users.count()
+
+class PhotoListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Photo
+        fields = [
+            "photo_id",
+            "is_private",
+            "thumbnail",
         ]
