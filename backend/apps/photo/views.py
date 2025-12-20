@@ -1,14 +1,15 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import PermissionDenied
 from rest_framework import generics,parsers
 from .models import Photo, Tag
-from apps.event.models import Event
-from .serializers import PhotoBulkUploadSerializer,PhotoDestroySerializer, PhotoBulkUpdateSerialier, PhotoSerializer, PhotoListSerializer
+from .serializers import PhotoBulkUploadSerializer,PhotoDestroySerializer, PhotoBulkUpdateSerialier, PhotoSerializer, PhotoListSerializer, PhotoDownloadSerializer
 from accounts.permissions import IsEventPhotoGrapher
-from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import json
 from .tasks import extract_exif,generate_thumbnail,add_watermark,generate_tag
+import os
+from django.conf import settings
+from django.http import HttpResponseBadRequest, FileResponse, HttpResponseNotFound
 # Create your views here.
 class PhotoUploadView(generics.CreateAPIView):
     serializer_class = PhotoBulkUploadSerializer
@@ -106,6 +107,30 @@ class PhotoListView(generics.ListAPIView):
         return queryset
 
 photo_list_view = PhotoListView.as_view()
+
+class DownloadAPIView(APIView):
+    def get(self,request,photo_id,*args,**kwargs):
+        #public not allowed
+        if request.user.role == 'P':
+            raise PermissionDenied("Only Members can Download Photos")
+        #For members 
+        photo=get_object_or_404(Photo,photo_id=photo_id)
+        
+        image_type = request.query_params.get("image_type","watermarked")
+        if image_type == "original":
+            image_file =  photo.photo.path
+        elif image_type == "watermarked":
+            image_file = photo.watermarked_image.path
+        else:
+            return HttpResponseBadRequest("Please Provide a valid type")
+        
+        response = FileResponse(open(image_file, "rb"), as_attachment=True)
+        response["Content-Disposition"] = f'attachment; filename="{os.path.basename(image_file)}"'
+        photo.downloaded_by.add(request.user)
+        return response
+       
+download_view = DownloadAPIView.as_view()
+
 #protect the endpoint /media/photos/ (not to show public users)
 
 

@@ -103,6 +103,5 @@ list_tagged_in = ListTaggedInPhotos.as_view()
 #Download a photo means Download to the particular folder of your system have to make an download table for this to track total download of a photo
 
 
-
 #Share a Photo absolute URL means want to share url of that photo 
-#(Frontend copy the url)
+#(Frontend copy the url in frontend)

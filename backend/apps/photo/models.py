@@ -30,7 +30,7 @@ class Photo(models.Model):
     tag = models.ManyToManyField(Tag,blank=True,related_name="related_photos")
     liked_users = models.ManyToManyField(User,related_name='liked_photos',through='Like',blank=True)
     is_favourite_of = models.ManyToManyField(User,related_name='favourite_photos',through='Favourite',blank=True)
-
+    downloaded_by = models.ManyToManyField(User,related_name='downloaded_photos',blank=True)
     class Meta:
         ordering = [
             "-upload_time_stamp",
