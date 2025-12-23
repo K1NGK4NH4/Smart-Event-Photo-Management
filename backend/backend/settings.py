@@ -44,7 +44,9 @@ INSTALLED_APPS = [
     'apps.event',
     'apps.photo',
     'apps.engagements',
-    'celery'
+    'celery',
+    'django_filters',
+    'django.contrib.postgres'
 ]
 
 MIDDLEWARE = [
@@ -149,12 +151,13 @@ EMAIL_HOST_PASSWORD = 'ulvr rzqj ksll wxey'
 
 # Rest framework configuration
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+    # 'DEFAULT_AUTHENTICATION_CLASSES': (
+    #     'rest_framework.authentication.TokenAuthentication',
+    # ),
+    # 'DEFAULT_PERMISSION_CLASSES': (
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ),
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
 CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"

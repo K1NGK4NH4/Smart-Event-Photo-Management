@@ -3,9 +3,12 @@ from django.utils import timezone
 import uuid
 from apps.event.models import Event
 from accounts.models import User
+from django.contrib.postgres.search import SearchVectorField
 # Create your models here.
 class Tag(models.Model):
     tag_name = models.CharField(max_length=50, unique=True)
+    
+
 
 class Photo(models.Model):
     photo_id = models.UUIDField(default=uuid.uuid4, primary_key=True,editable=False)
@@ -31,11 +34,14 @@ class Photo(models.Model):
     liked_users = models.ManyToManyField(User,related_name='liked_photos',through='Like',blank=True)
     is_favourite_of = models.ManyToManyField(User,related_name='favourite_photos',through='Favourite',blank=True)
     downloaded_by = models.ManyToManyField(User,related_name='downloaded_photos',blank=True)
+
+    search_field = SearchVectorField(null=True)
     class Meta:
         ordering = [
             "-upload_time_stamp",
             "-taken_at"
         ]
+
 
 class Like(models.Model):
     like_id = models.UUIDField(default=uuid.uuid4,primary_key=True,editable=False,unique=True)

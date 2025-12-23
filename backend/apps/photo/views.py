@@ -8,8 +8,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .tasks import extract_exif,generate_thumbnail,add_watermark,generate_tag
 import os
-from django.conf import settings
+from rest_framework import filters
+from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponseBadRequest, FileResponse, HttpResponseNotFound
+from .filters import PhotoFilter, search
 # Create your views here.
 class PhotoUploadView(generics.CreateAPIView):
     serializer_class = PhotoBulkUploadSerializer
@@ -54,7 +56,6 @@ class BulkPhotoUpdate(generics.GenericAPIView):
     def patch(self,request,*args,**kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # print(serializer.validated_data)
         photo_ids =  serializer.validated_data.get("photo_ids")
         tagged_users = serializer.validated_data.get("tagged_users",None) 
         event = serializer.validated_data.get("event",None) 
@@ -80,7 +81,6 @@ class BulkPhotoUpdate(generics.GenericAPIView):
 update_view = BulkPhotoUpdate.as_view()
 
 
-
 #is_private == true :- Only can be seen by Members
 #is_private == False :- main Image can be seen by members and watermarked_image can be seen by public
 #additional field (like count)
@@ -97,11 +97,18 @@ photo_retreive_view = PhotoRetrieveView.as_view()
 #List view of photos is_private = true no public access 
 class PhotoListView(generics.ListAPIView):
     serializer_class = PhotoListSerializer
+    # filter_backends = [filters.SearchFilter]
+    # search_fields = ['event__event_name','event__event_photographer__name','tag__tag_name','tagged_user__username']
+    filterset_class = PhotoFilter
+
     def get_queryset(self):
         queryset = Photo.objects.all()
         event_name = self.request.query_params.get("event")
+        q = self.request.query_params.get("q")
         if event_name:
             queryset = queryset.filter(event__event_name = event_name)
+        if q:
+            queryset = search(q,queryset)
         if self.request.user.role == 'P':
             queryset = queryset.filter(is_private=False)
         return queryset
@@ -136,5 +143,6 @@ download_view = DownloadAPIView.as_view()
 
 #PhotoGraphic Dashboard (Total likes , Total Downloads, uploaded photo in chrononical order)
 
-
-#Advanced Search API
+#Search and Filter API 
+#Search by Full text search and all its benefits
+#filter allowing (event__event_name etc and also date range filter)

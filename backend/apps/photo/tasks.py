@@ -161,5 +161,4 @@ def generate_tag(photo_id):
             tag_instance = Tag.objects.get_or_create(tag_name=prediction["label"])[0]
             tags.append(tag_instance)
     photo.tag.add(*tags)
-    print(prediction_list)
 
