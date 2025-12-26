@@ -4,6 +4,7 @@ import uuid
 from apps.event.models import Event
 from accounts.models import User
 from django.contrib.postgres.search import SearchVectorField
+
 # Create your models here.
 class Tag(models.Model):
     tag_name = models.CharField(max_length=50, unique=True)
@@ -93,3 +94,6 @@ class TaggedUser(models.Model):
             "-tag_time_stamp"
         ]
 
+# from django.contrib.com
+class Comments(models.Model):
+    pass

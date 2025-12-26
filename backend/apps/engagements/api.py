@@ -1,24 +1,20 @@
-from django.shortcuts import render
-from apps.photo.models import Photo,Like
-from accounts.models import User
+from apps.photo.models import Photo,Like,Favourite
 from rest_framework.views import APIView
-from .serializers import PhotoLikeSerializer
 from rest_framework.response import Response
 from django.db import transaction,IntegrityError
 from rest_framework import generics
 from apps.photo.serializers import PhotoListSerializer
+from django.shortcuts import get_object_or_404
 # Create your views here.
 
 #add like 
 class LikeAdd(APIView):
-    def post(self,request,*args,**kwargs):
-        serializer = PhotoLikeSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        photo = serializer.validated_data.get("photo_id")  
+    def post(self,request,photo_id,*args,**kwargs):
+        photo = get_object_or_404(Photo,photo_id=photo_id)
         user = self.request.user 
         try:
             with transaction.atomic():
-                photo.liked_users.add(user)
+                Like.objects.create(user=user,photo=photo)
         except IntegrityError:
             return Response(
                 {"message": "Already liked"},
@@ -33,13 +29,10 @@ add_like = LikeAdd.as_view()
 # remove like
 
 class RemoveLike(APIView):
-    def delete(self,request,*args,**kwargs):
-        serializer = PhotoLikeSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        photo = serializer.validated_data.get("photo_id")  
+    def delete(self,request,photo_id,*args,**kwargs):
+        photo = get_object_or_404(Photo,photo_id=photo_id) 
         user = self.request.user
-        if photo.liked_users.filter(email=user.email).exists() :
-            photo.liked_users.remove(user)
+        Like.objects.filter(user=user,photo=photo).delete()
         return Response({
             "message":"Like Removed"
         })
@@ -50,14 +43,12 @@ remove_like = RemoveLike.as_view()
 #all below are only allowed to members
 #add photo to my favourites 
 class AddToFavourite(APIView):
-    def post(self,request,*args,**kwargs):
-        serializer = PhotoLikeSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        photo = serializer.validated_data.get("photo_id")  
+    def post(self,request,photo_id,*args,**kwargs):
+        photo = get_object_or_404(Photo,photo_id=photo_id)  
         user = self.request.user 
         try:
             with transaction.atomic():
-                photo.is_favourite_of.add(user)
+                Favourite.objects.create(user=user,photo=photo)
         except IntegrityError:
             return Response(
                 {"message": "Already added to Favourites"},
@@ -71,13 +62,10 @@ add_favourite = AddToFavourite.as_view()
 
 # Remove Photo from my favourites 
 class RemoveFavourite(APIView):
-    def delete(self,request,*args,**kwargs):
-        serializer = PhotoLikeSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        photo = serializer.validated_data.get("photo_id")  
+    def delete(self,request,photo_id,*args,**kwargs):
+        photo = get_object_or_404(Photo,photo_id=photo_id)  
         user = self.request.user
-        if photo.liked_users.filter(email=user.email).exists() :
-            photo.is_favourite_of.remove(user)
+        Favourite.objects.filter(user=user,photo=photo).delete()
         return Response({
                 "message":"Removed from your Favourite List"
             })

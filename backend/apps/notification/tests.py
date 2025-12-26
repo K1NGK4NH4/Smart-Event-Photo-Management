@@ -7,5 +7,10 @@ dict = {
     "Home" : "Kendrapara"
 }
 
-for key,value in dict.items():
-    print(key," : ",value)
+# for key,value in dict.items():
+#     print(key," : ",value)
+
+i = 0
+while i < 2:
+    print(i)
+    i += 1

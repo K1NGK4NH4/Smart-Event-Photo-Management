@@ -5,22 +5,21 @@ from apps.event.models import Event
 import json
 
 class Notification(WebsocketConsumer):
-
     def connect(self):
+        self.groups = ["like_broadcast"]
         user = self.scope["user"]
         if not user.is_authenticated:
             self.close()
             return
-        if getattr(user,"role",None) == 'P':
-            self.close()
-            return
+        if getattr(user,"role",None) != 'P':
+            self.groups.append(f"notify_user_{user.pk}")
 
-        self.group_name = f"notify_user_{user.pk}"
-        
-        async_to_sync(self.channel_layer.group_add)(
-            self.group_name,self.channel_name
-        )
-            # self.joined_groups.append(group_name)
+        self.joined_groups = []
+        for group_name in self.groups:
+            async_to_sync(self.channel_layer.group_add)(
+                group_name,self.channel_name
+            )
+            self.joined_groups.append(group_name)
         
         self.accept()
     
@@ -30,12 +29,13 @@ class Notification(WebsocketConsumer):
     
     
     def disconnect(self,code):
-        self.channel_layer.group_discard(
-            self.group_name,
-            self.channel_name
-        )
+        for group_name in self.joined_groups:
+            async_to_sync(self.channel_layer.group_discard)(
+                group_name,
+                self.channel_name
+            )
         
-        # self.joined_groups = []
+        self.joined_groups = []
     
     def send_notification(self,event):
         # Send message to WebSocket

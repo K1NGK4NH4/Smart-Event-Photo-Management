@@ -1,17 +1,17 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import generics,parsers
-from .models import Photo, Tag
-from .serializers import PhotoBulkUploadSerializer,PhotoDestroySerializer, PhotoBulkUpdateSerialier, PhotoSerializer, PhotoListSerializer, PhotoDownloadSerializer
+from .models import *
+from .serializers import *
 from accounts.permissions import IsEventPhotoGrapher
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .tasks import extract_exif,generate_thumbnail,add_watermark,generate_tag
+from .tasks import *
 import os
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
-from django.http import HttpResponseBadRequest, FileResponse, HttpResponseNotFound
-from .filters import PhotoFilter, search
+from django.http import HttpResponseBadRequest, FileResponse
+from .filters import *
 from apps.notification.views import *
 
 # Create your views here.
@@ -121,6 +121,7 @@ class PhotoRetrieveView(generics.RetrieveAPIView):
 photo_retreive_view = PhotoRetrieveView.as_view()
 
 #List view of photos is_private = true no public access 
+#add pagination
 class PhotoListView(generics.ListAPIView):
     serializer_class = PhotoListSerializer
     # filter_backends = [filters.SearchFilter]

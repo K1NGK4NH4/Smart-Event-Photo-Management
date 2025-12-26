@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'accounts',
     'apps.event',
-    'apps.photo',
+    'apps.photo.apps.PhotoConfig',
     'apps.engagements',
     'apps.notification',
     'celery',
