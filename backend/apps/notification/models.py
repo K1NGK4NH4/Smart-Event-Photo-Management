@@ -1,6 +1,6 @@
 from django.db import models
 from accounts.models import User
-from apps.photo.models import Photo
+from apps.photo.models import *
 
 # Create your models here.
 class Notification(models.Model):
@@ -10,6 +10,7 @@ class Notification(models.Model):
     is_seen = models.BooleanField(default=False)
     type = models.CharField(max_length=120, null=True, blank=True)
     photo = models.ForeignKey(Photo, blank=True, null=True, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Comment,blank=True,null=True,on_delete=models.CASCADE)
 
     def __str__(self):
-         return f"Notification for {self.user.username}: {self.text_message[:40]}"
+         return f"Notification for {self.user.username}: {self.text_message}"

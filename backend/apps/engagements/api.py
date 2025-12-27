@@ -5,6 +5,8 @@ from django.db import transaction,IntegrityError
 from rest_framework import generics
 from apps.photo.serializers import PhotoListSerializer
 from django.shortcuts import get_object_or_404
+from .serializers import *
+from rest_framework.status import HTTP_201_CREATED
 # Create your views here.
 
 #add like 
@@ -88,8 +90,38 @@ class ListTaggedInPhotos(generics.ListAPIView):
     
 list_tagged_in = ListTaggedInPhotos.as_view()
 
-#Download a photo means Download to the particular folder of your system have to make an download table for this to track total download of a photo
+# Add Comments for a photo
+class CommentAdd(APIView):
+    def post(self,request,photo_id,*args,**kwargs):
+        user = request.user
+        serializer = CommentSerializer(data=request.data,context={"photo_id":photo_id,"request":request})
+        serializer.is_valid(raise_exception=True)
+        photo = get_object_or_404(Photo,photo_id=photo_id)
+        serializer.save(user=user,photo=photo)
+
+        return Response({
+            "message":"Comment added successfully."
+        },status=HTTP_201_CREATED
+    )
+
+add_comment = CommentAdd.as_view()
+# Delete Comments for a photo
+class CommentRemove(APIView):
+    def delete(self,request,photo_id,*args,**kwargs):
+        user = request.user
+        photo = get_object_or_404(Photo,photo_id=photo_id)
+        comment_id = request.data.get("comment_id")
+        comment = get_object_or_404(Comment, id=comment_id, user=user, photo=photo)
+        comment.delete()
+    
+        return Response({
+            "message": "Comment deleted successfully."
+        })
+        
+
+remove_comment = CommentRemove.as_view()
 
 
-#Share a Photo absolute URL means want to share url of that photo 
-#(Frontend copy the url in frontend)
+# parent_comment = serializer.validated_data.get("parent_comment")
+        # body = serializer.validated_data.get("body")
+        # Comment.objects.create(user=user,photo=photo,parent_comment=parent_comment,body=body)

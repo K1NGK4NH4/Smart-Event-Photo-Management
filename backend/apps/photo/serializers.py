@@ -136,12 +136,3 @@ class PhotoListSerializer(serializers.ModelSerializer):
             "thumbnail",
         ]
 
-class PhotoDownloadSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Photo
-        fields = [
-            "photo",
-            "watermarked_image"
-        ]
-    
-    

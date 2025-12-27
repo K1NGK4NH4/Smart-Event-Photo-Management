@@ -106,7 +106,56 @@ def like_notif_to_photographer(photo,message):
     )
 
 
-# Comment added Notification to Photographer (X added comment to your photo)
 
-# Replied to comment to the user (X replied to you in a photo)
+def comment_broadcast(comment,parent_comment):
+    if parent_comment is not None: parent_comment_id = str(parent_comment.id)
+    else:  parent_comment_id = None
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        "comment_broadcast",{
+            "type": "send_notification",
+                 "value":{
+                    "photo_id" : str(comment.photo.photo_id),
+                    "parent_comment" : parent_comment_id ,
+                    "commentator": comment.user.username,
+                    "body":comment.body
+            }
+        }
+    )
+
+#There is bug in it
+def build_comment_notification(comment,parent_comment):
+    '''
+        When comment is added to direct photo notify to the photograher
+        When comment is the reply of another comment notify to the commentator
+    '''
+        #delete it from notification db(but how a same comment may have a database)
+    if parent_comment is None:
+        parent_commentator = comment.photo.event.event_photographer
+        message = f"{comment.user.username} commented on your photo."
+    else:
+        parent_commentator = parent_comment.user
+        message = f"{comment.user.username} replied to your comment."
+     
+    if parent_commentator == comment.user:
+        return None,None
+    
+    return parent_commentator,message
+
+
+def send_comment_notification(comment,parent_commentator,message):
+    Notification.objects.create(user=parent_commentator, type="comment_notif", photo = comment.photo,text_message=message, comment=comment)
+    channel_layer = get_channel_layer()
+
+    async_to_sync(channel_layer.group_send)(
+        f"notify_user_{parent_commentator.pk}",{
+            "type": "send_notification",
+                 "value":{
+                    "photo_id" : str(comment.photo.photo_id),
+                    "message":message,
+            }
+        }
+    )
+
+
 

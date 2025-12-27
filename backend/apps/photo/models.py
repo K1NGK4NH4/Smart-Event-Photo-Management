@@ -94,6 +94,18 @@ class TaggedUser(models.Model):
             "-tag_time_stamp"
         ]
 
-# from django.contrib.com
-class Comments(models.Model):
-    pass
+
+
+class Comment(models.Model):
+    id = models.UUIDField(default=uuid.uuid4,primary_key=True,editable=False,unique=True)
+    photo = models.ForeignKey(Photo, on_delete=models.CASCADE, related_name='comments')
+    parent_comment = models.ForeignKey('Comment', on_delete=models.CASCADE, related_name="replies", null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="comments")
+    body = models.TextField(max_length=300)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = [
+            "-created"
+        ]
+    

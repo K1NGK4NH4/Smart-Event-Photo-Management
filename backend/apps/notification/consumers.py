@@ -6,7 +6,7 @@ import json
 
 class Notification(WebsocketConsumer):
     def connect(self):
-        self.groups = ["like_broadcast"]
+        self.groups = ["like_broadcast","comment_broadcast"]
         user = self.scope["user"]
         if not user.is_authenticated:
             self.close()
