@@ -18,8 +18,6 @@ class PhotoBulkUploadSerializer(serializers.ModelSerializer):
         child = serializers.ImageField(allow_empty_file = False,use_url=False),
         write_only = True
     )
-    event = serializers.SlugRelatedField(slug_field='event_name',queryset = Event.objects.all())
-    # tags = TagSerializer(many=True,required=False) frontend mai jab json bhejunga that time see
     tags = serializers.ListField(
         child = serializers.CharField(max_length=50),
         required = False
@@ -28,11 +26,11 @@ class PhotoBulkUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
         fields = [
-            'event',
-            'uploaded_photos',
-            'tags',
-            'tagged_users'
+            "uploaded_photos",
+            "tagged_users",
+            "tags"
         ]
+    
     def create(self,validated_data):
         uploaded_photo_list = validated_data.pop("uploaded_photos")
         if validated_data.get("tags"): tags = validated_data.pop("tags") 

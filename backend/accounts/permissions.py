@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission
-
-
+from apps.event.models import Event
+from django.shortcuts import get_object_or_404
 class IsMemberUser(BasePermission):
      message = "You must be a member to get this"
      def has_permission(self,request,view):
@@ -42,13 +42,24 @@ class IsEventCoordinator(BasePermission):
           return obj.event_coordinator == request.user 
 
 class IsEventPhotoGrapher(BasePermission):
-     message = "You must be the photographer of the event to access this"
+     message = "You must be the photographer or Event coordinator of the event to access this"
      def has_permission(self, request, view):
-          return bool(
+          base_permission = bool(
                request.user
                and request.user.is_authenticated
                and request.user.role != "P" 
           )
+
+          if base_permission == False:
+               return False
+          
+          if request.user.role == "A":
+               return True
+          event_id = view.kwargs["id"]
+          event = get_object_or_404(Event,id=event_id)
+
+          return ( request.user == event.event_photographer or request.user == event.event_coordinator)
+
      def has_object_permission(self, request, view, obj):
           if request.user.role == "A":
                return True

@@ -27,6 +27,13 @@ class Event(models.Model):
         super().save(*args,**kwargs)
     class Meta:
         ordering = ["-event_date"]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["event_name", "event_date","event_coordinator"],
+                name="unique_event_name_date_coordinator"
+            )
+        ]
         #add some unique constraint buddy
 
     def get_absolute_url(self):

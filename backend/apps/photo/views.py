@@ -15,15 +15,16 @@ from .filters import *
 from apps.notification.notification import *
 
 # Create your views here.
-class PhotoUploadView(generics.CreateAPIView):
-    serializer_class = PhotoBulkUploadSerializer
+class PhotoUploadView(generics.GenericAPIView):
     parser_classes = [parsers.MultiPartParser, parsers.FormParser]
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)  
+    permission_classes = [IsEventPhotoGrapher]
+
+    def post(self, request,*args, **kwargs):
+        serializer = PhotoBulkUploadSerializer(data=request.data)  
         serializer.is_valid(raise_exception=True) 
-        photos = serializer.save() 
-        #get event and tagged users 
-        event = serializer.validated_data['event']
+        event = get_object_or_404(Event,id = kwargs["id"])
+        photos = serializer.save(event=event) 
+        # get event and tagged users 
         tagged_users = serializer.validated_data.get("tagged_users",None)
         photo_tagged_users_dict = {}
         for photo in photos:
@@ -34,7 +35,8 @@ class PhotoUploadView(generics.CreateAPIView):
             if tagged_users is not None: photo_tagged_users_dict.update({photo:tagged_users})
         
         #send notifications
-        photoupload_notification(event=event,photos=photos)
+        photo_uploader = request.user
+        photoupload_notification(event=event,photos=photos,photo_uploader=photo_uploader)
         if tagged_users is not None:
             taguser_notification(photo_tagged_user_dict=photo_tagged_users_dict,event=event)
 
@@ -44,19 +46,17 @@ class PhotoUploadView(generics.CreateAPIView):
 
 upload_photo_view = PhotoUploadView.as_view()
 
-class PhotoBulkDeleteView(APIView):
+
+class PhotoBulkDeleteView(generics.GenericAPIView):
     permission_classes =[IsEventPhotoGrapher]
     def delete(self,request,*args,**kwargs):
         serializer = PhotoDestroySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         photo_ids = serializer.validated_data.get("photo_ids")
-        qs = Photo.objects.filter(
-            photo_id__in = photo_ids,
-            event__event_photographer=request.user
-        )
-        deleted,_ = qs.delete()
+        qs = Photo.objects.filter(photo_id__in = photo_ids,event_id=kwargs["id"])
+        qs.delete()
         return Response({
-            "message":f"{deleted} Photos are deleted successfully",
+            "message":" Photos are deleted successfully",
         })
 
 delete_photos = PhotoBulkDeleteView.as_view()
@@ -64,7 +64,8 @@ delete_photos = PhotoBulkDeleteView.as_view()
 #correct handles now will create get for all attribute later
 class BulkPhotoUpdate(generics.GenericAPIView):
     queryset = Photo.objects.all()
-    serializer_class = PhotoBulkUpdateSerialier
+    serializer_class = PhotoBulkUploadSerializer
+    permission_classes = [IsEventPhotoGrapher]
     def patch(self,request,*args,**kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -106,9 +107,6 @@ class BulkPhotoUpdate(generics.GenericAPIView):
 update_view = BulkPhotoUpdate.as_view()
 
 
-#is_private == true :- Only can be seen by Members
-#is_private == False :- main Image can be seen by members and watermarked_image can be seen by public
-#additional field (like count)
 class PhotoRetrieveView(generics.RetrieveAPIView):
     lookup_field = 'photo_id'
     serializer_class = PhotoSerializer
@@ -119,8 +117,7 @@ class PhotoRetrieveView(generics.RetrieveAPIView):
 
 photo_retreive_view = PhotoRetrieveView.as_view()
 
-#List view of photos is_private = true no public access 
-#add pagination
+
 class PhotoListView(generics.ListAPIView):
     serializer_class = PhotoListSerializer
     # filter_backends = [filters.SearchFilter]
@@ -140,6 +137,8 @@ class PhotoListView(generics.ListAPIView):
         return queryset
 
 photo_list_view = PhotoListView.as_view()
+
+
 
 class DownloadAPIView(APIView):
     def get(self,request,photo_id,*args,**kwargs):

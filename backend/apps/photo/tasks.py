@@ -77,7 +77,7 @@ import os
 def generate_thumbnail(photo_id): #PNG ka nhi bana rha hai
     photo = Photo.objects.filter(photo_id=photo_id).first() #get the photo object
     # create thumbnail
-    img = Image.open(photo.photo)
+    img = Image.open(photo.photo).convert("RGB")
     img.thumbnail(size=(200,200))
     # convert into bytes and save
     new_img_io = BytesIO()

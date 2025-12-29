@@ -16,7 +16,8 @@ def event_member_change(sender,instance,action,pk_set,*args, **kwargs):
 
     if action == 'post_add':
         event_notification(event=instance,pk_set=pk_set)
-        send_event_member_mail.delay(instance,pk_set)
+        pk_list = list(pk_set)
+        send_event_member_mail.delay(instance.id,pk_list)
     
     if action == 'post_remove':
         for pk in pk_set:

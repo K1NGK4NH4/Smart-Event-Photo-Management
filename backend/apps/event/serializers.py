@@ -32,7 +32,7 @@ class EventSerializer(serializers.ModelSerializer):
         old_members = current_members.copy()
         if event_members is not None:
             for user in event_members:
-                if user.role != 'P':   # P = Public (NOT allowed)
+                if user.role != 'P':   
                     current_members.add(user)
             
         # Also check if new event coordinator or event photographer is assigned add them also to event_members category

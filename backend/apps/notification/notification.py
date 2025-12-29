@@ -5,34 +5,34 @@ from .models import Notification
 from accounts.models import User
 
 #Add Notification creation or updation to all
-def photoupload_notification(event,photos):
+def photoupload_notification(event,photos,photo_uploader):
     channel_layer = get_channel_layer()
 
-    event_members = event.event_members.exclude(email = event.event_photographer.email)
+    event_members = event.event_members.exclude(email = photo_uploader.email)
     if len(photos) == 1:
-        str = "photo is"
+        s = "photo is"
     else:
-        str = "photos are"
+        s = "photos are"
 
     for member in event_members:
         async_to_sync(channel_layer.group_send)(
             f"notify_user_{member.pk}",{
                 "type":"send_notification",
                 "value":{
-                    "message":f"{len(photos)} {str} uploaded to Event {event.event_name}.",
-                    "event_id":event.id,
+                    "message":f"{len(photos)} {s} uploaded to Event {event.event_name}.",
+                    "event_id":str(event.id),
                 }
             }
         )
 
     #for photographer 
     async_to_sync(channel_layer.group_send)(
-        f"notify_user_{event.event_photographer.pk}",
+        f"notify_user_{photo_uploader.pk}",
         {
             "type":"send_notification",
             "value":{
                 "message":f"You uploaded {len(photos)} photos to Event {event.event_name}.",
-                "event_id":event.id,
+                "event_id": str(event.id),
             }
         }
     )
@@ -155,7 +155,7 @@ def send_comment_notification(comment,parent_commentator,message):
     )
 
 
-def event_notification(event,pk_set,message):
+def event_notification(event,pk_set):
     channel_layer = get_channel_layer()
     message = f"You are added to event {event.event_name}-{event.event_date.year}"
 
